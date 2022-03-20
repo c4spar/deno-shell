@@ -1,0 +1,20 @@
+{
+  "tasks": {
+    "clean": "rm -rf target",
+    "build": "cargo build",
+    "example": "deno run -A --unstable examples/exec.ts",
+    "watch": "deno task example --watch",
+    "fmt": "deno fmt && cargo fmt",
+    "lint": "deno lint && cargo clippy"
+  },
+  "lint": {
+    "files": {
+      "exclude": ["target/"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "exclude": ["target/"]
+    }
+  }
+}
