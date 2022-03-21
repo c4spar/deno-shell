@@ -15,7 +15,7 @@ pub struct ExecOptions {
 #[repr(C)]
 #[derive(Default, Serialize)]
 pub struct ExecResult {
-    exit_code: i32,
+    exit_code: Option<i32>,
     error_message: Option<String>,
 }
 
@@ -39,16 +39,13 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
     let seq_list = deno_task_shell::parser::parse(&options.script);
 
     if seq_list.is_err() {
-        let options = ExecResult {
-            exit_code: 1,
-            error_message: Option::Some(format!(
-                "{} '{}'. {}",
-                "Failed to parse script",
-                options.script,
-                seq_list.err().unwrap().to_string()
-            )),
-        };
-        return Ok(serde_json::to_string(&options)?);
+        let message = format!(
+            "{} '{}'. {}",
+            "Failed to parse script",
+            options.script,
+            seq_list.err().unwrap().to_string()
+        );
+        return Ok(error_result(message)?);
     }
 
     let seq_list = seq_list.unwrap();
@@ -56,11 +53,8 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
     if options.cwd.is_some() {
         let cwd = options.cwd.as_ref().unwrap();
         if !Path::new(&cwd).exists() {
-            let options = ExecResult {
-                exit_code: 1,
-                error_message: Option::Some(format!("{} '{}'.", "No such file or directory", cwd,)),
-            };
-            return Ok(serde_json::to_string(&options)?);
+            let message = format!("{} '{}'.", "No such file or directory", cwd);
+            return Ok(error_result(message)?);
         }
     }
 
@@ -82,12 +76,26 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
 
     let exit_code = deno_task_shell::execute(seq_list, env_vars, &cwd).await;
 
+    Ok(success_result(exit_code)?)
+}
+
+fn success_result(exit_code: i32) -> serde_json::error::Result<String> {
+    result(None, Option::Some(exit_code))
+}
+
+fn error_result(message: String) -> serde_json::error::Result<String> {
+    result(Option::Some(message), None)
+}
+
+fn result(
+    error_message: Option<String>,
+    exit_code: Option<i32>,
+) -> serde_json::error::Result<String> {
     let options = ExecResult {
         exit_code,
-        error_message: None,
+        error_message,
     };
-
-    Ok(serde_json::to_string(&options)?)
+    serde_json::to_string(&options)
 }
 
 fn decode<'a, T: Deserialize<'a>>(ptr: *const u8, len: usize) -> T {

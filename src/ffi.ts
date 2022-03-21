@@ -28,7 +28,7 @@ interface ExecOptions {
 }
 
 interface ExecResult {
-  exit_code: number;
+  exit_code?: number;
   error_message?: string;
 }
 
@@ -69,6 +69,9 @@ function parseExecResult(pointer: Deno.UnsafePointer): number {
   const result: ExecResult = JSON.parse(cStr);
   if (result.error_message) {
     throw new Error(red(result.error_message));
+  }
+  if (typeof result.exit_code === "undefined") {
+    throw new Error(red("Internal error"));
   }
   return result.exit_code;
 }
