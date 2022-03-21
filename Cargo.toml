@@ -2,7 +2,7 @@
 name = "deno_shell"
 version = "0.0.1-pre.0"
 authors = ["c4spar (Benjamin Fischer)"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 path = "src/bindings.rs"
@@ -12,3 +12,5 @@ crate-type = ["cdylib"]
 deno_task_shell = "0.1.9"
 anyhow = "1.0.55"
 tokio = "1.17.0"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
