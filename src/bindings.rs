@@ -53,29 +53,29 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
 
     let seq_list = seq_list.unwrap();
 
-    // if options.cwd.is_some() {
-    //     if ! Path::new(&options.cwd.unwrap()).exists() {
-    //         let options = ExecResult {
-    //             exit_code: 1,
-    //             error_message: Option::Some(format!(
-    //                 "{} '{}'.",
-    //                 "No such file or directory",
-    //                 options.cwd.unwrap(),
-    //             )),
-    //         };
-    //         return Ok(serde_json::to_string(&options)?)
-    //     }
-    // }
+    if options.cwd.is_some() {
+        let cwd = options.cwd.as_ref().unwrap();
+        if ! Path::new(&cwd).exists() {
+            let options = ExecResult {
+                exit_code: 1,
+                error_message: Option::Some(format!(
+                    "{} '{}'.",
+                    "No such file or directory",
+                    cwd,
+                )),
+            };
+            return Ok(serde_json::to_string(&options)?)
+        }
+    }
 
     let cwd = match &options.cwd {
         Some(x) => {
             let path = Path::new(x);
             if Path::is_relative(path) {
-                let path = Path::join(std::env::current_dir().unwrap().as_path(), path);
-                path.canonicalize().unwrap().to_path_buf()
+                Path::join(std::env::current_dir().unwrap().as_path(), path)
             } else {
-                path.canonicalize().unwrap().to_path_buf()
-            }
+                path.to_path_buf()
+            }.canonicalize().unwrap()
         }
         None => std::env::current_dir()?,
     };
