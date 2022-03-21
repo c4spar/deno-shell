@@ -55,16 +55,12 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
 
     if options.cwd.is_some() {
         let cwd = options.cwd.as_ref().unwrap();
-        if ! Path::new(&cwd).exists() {
+        if !Path::new(&cwd).exists() {
             let options = ExecResult {
                 exit_code: 1,
-                error_message: Option::Some(format!(
-                    "{} '{}'.",
-                    "No such file or directory",
-                    cwd,
-                )),
+                error_message: Option::Some(format!("{} '{}'.", "No such file or directory", cwd,)),
             };
-            return Ok(serde_json::to_string(&options)?)
+            return Ok(serde_json::to_string(&options)?);
         }
     }
 
@@ -75,7 +71,9 @@ async fn execute_task(options: &ExecOptions) -> Result<String, anyhow::Error> {
                 Path::join(std::env::current_dir().unwrap().as_path(), path)
             } else {
                 path.to_path_buf()
-            }.canonicalize().unwrap()
+            }
+            .canonicalize()
+            .unwrap()
         }
         None => std::env::current_dir()?,
     };
